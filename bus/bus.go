@@ -1,12 +1,14 @@
 package bus
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 )
 
 const (
-	ROMSize = 32*1024
-	RAMSize = 32*1024
+	ROMSize = 8*1024
+	RAMSize = 4*1024
 )
 
 type BusIO interface {
@@ -31,8 +33,7 @@ func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
 
 func (b *EmulatorBus) WriteMemoryByte(address uint16, data uint8) {
 	if address < ROMSize {
-		//panic("bus: write to read-only memory")
-		b.ROM[address] = data
+		panic("bus: write to read-only memory")
 		return
 	}
 	if address > 0xFFFF-RAMSize {

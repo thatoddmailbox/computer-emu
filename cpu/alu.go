@@ -1,23 +1,23 @@
 package cpu
 
-func (c *CPU) setAlu8OpFlags(result uint8, noOverflowResult uint16, subtract bool) {
+func (c *CPU) setAlu8OpFlags(result uint8, noOverflowResult int16, subtract bool) {
 	c.setFlag(FlagSign, ((result & (1 << 7)) != 0))
 	c.setFlag(FlagZero, (result == 0))
-	c.setFlag(FlagParityOverflow, (uint16(result) != noOverflowResult))
+	c.setFlag(FlagParityOverflow, (int16(result) != noOverflowResult))
 	c.setFlag(FlagSubtract, subtract)
-	c.setFlag(FlagCarry, (noOverflowResult & (1 << 8) != 0))
+	c.setFlag(FlagCarry, (noOverflowResult > 0xFF || noOverflowResult < 0))
 }
 
 func (c *CPU) Add8WithFlags(a uint8, b uint8) uint8 {
 	result := a + b
-	noOverflowResult := uint16(a) + uint16(b)
+	noOverflowResult := int16(a) + int16(b)
 	c.setAlu8OpFlags(result, noOverflowResult, false)
 	return result
 }
 
 func (c *CPU) Subtract8WithFlags(a uint8, b uint8) uint8 {
 	result := a - b
-	noOverflowResult := uint16(a) - uint16(b)
+	noOverflowResult := int16(a) - int16(b)
 	c.setAlu8OpFlags(result, noOverflowResult, true)
 	return result
 }
@@ -40,6 +40,10 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 		if c.getFlag(FlagCarry) {
 			carry = 1
 		}
+		// println("sbc")
+		// println(c.Registers.A)
+		// println(operand)
+		// println(carry)
 		c.Registers.A = c.Subtract8WithFlags(c.Registers.A, operand + carry)
 	case ALUOperationAnd:
 		result = c.Registers.A & operand

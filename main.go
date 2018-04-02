@@ -57,20 +57,10 @@ func main() {
 
 	bus := bus.EmulatorBus{}
 
-	// bus.ROM[0] = 0x06 // ld b, n
-	// bus.ROM[1] = 0x42
-	// bus.ROM[2] = 0x78 // ld a, b
-	// bus.ROM[3] = 0x80 // add a, b
-	// bus.ROM[4] = 0xC6 // add a, n
-	// bus.ROM[5] = 0x7D
-
-	loadHexFile("tinybas.hex", &bus)
-	// ioutil.WriteFile("out.bin", bus.ROM[:], 0644)
+	loadBinFile("prg.bin", &bus)
 
 	sim := cpu.CPU{}
 	sim.Bus = bus
-
-	// sim.PC = 0x1000
 
 	for {
 		instruction := sim.Bus.ReadMemoryByte(sim.PC)

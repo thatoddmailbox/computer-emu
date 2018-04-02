@@ -293,7 +293,10 @@ func (c *CPU) Step() error {
 				c.Bus.WriteIOByte(c.Bus.ReadMemoryByte(c.PC + 1), c.Registers.A)
 				instructionLength = 2
 			} else if y == 3 {
-				// TODO
+				// in a, [n]
+				validInstruction = true
+				c.Registers.A = c.Bus.ReadIOByte(c.Bus.ReadMemoryByte(c.PC + 1))
+				instructionLength = 2
 			} else if y == 4 {
 				// ex [sp], hl
 				validInstruction = true
@@ -369,6 +372,9 @@ func (c *CPU) Step() error {
 		} else if z == 7 {
 			// rst y*8
 			validInstruction = true
+			returnAddress := c.PC + 1
+			c.Push(uint8((returnAddress & 0xFF00) >> 8))
+			c.Push(uint8(returnAddress & 0xFF))
 			c.PC = uint16(y)*8
 			shouldIncrementPC = false
 		}

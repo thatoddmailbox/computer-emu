@@ -226,7 +226,7 @@ var DisassemblyTable_Unprefixed = map[uint8]InstructionInfo {
 	0xD8: InstructionInfo{"ret", "c", 0},
 	0xD9: InstructionInfo{"exx", "", 0},
 	0xDA: InstructionInfo{"jp", "c, %d16", 2},
-	0xDB: InstructionInfo{"i%d8", "a, (%d8)", 1},
+	0xDB: InstructionInfo{"in", "a, (%d8)", 1},
 	0xDC: InstructionInfo{"call", "c, %d16", 2},
 	// DD prefix
 	0xDE: InstructionInfo{"sbc", "a, %d8", 1},
