@@ -53,6 +53,17 @@ func (c *CPU) ConditionMet(condition ConditionCodeType) bool {
 	}
 }
 
+func (c *CPU) Push(data uint8) {
+	c.Registers.SP = c.Registers.SP - 1
+	c.Bus.WriteMemoryByte(c.Registers.SP, data)
+}
+
+func (c *CPU) Pop() uint8 {
+	data := c.Bus.ReadMemoryByte(c.Registers.SP)
+	c.Registers.SP = c.Registers.SP + 1
+	return data
+}
+
 func (c *CPU) Step() error {
 	instruction := c.Bus.ReadMemoryByte(c.PC)
 	instructionLength := 1
@@ -135,9 +146,15 @@ func (c *CPU) Step() error {
 				c.Set16bitRegister(DecodeTable_RP[p], c.Get16bitRegister(DecodeTable_RP[p]) - 1)
 			}
 		} else if z == 4 {
-			// TODO: everything
+			// inc r[y]
+			validInstruction = true
+			orig := c.Get8bitRegister(DecodeTable_R[y])
+			c.Set8bitRegister(DecodeTable_R[y], c.Add8WithFlags(orig, 1))
 		} else if z == 5 {
-			// TODO: everything
+			// dec r[y]
+			validInstruction = true
+			orig := c.Get8bitRegister(DecodeTable_R[y])
+			c.Set8bitRegister(DecodeTable_R[y], c.Subtract8WithFlags(orig, 1))
 		} else if z == 6 {
 			// ld r[y], n
 			validInstruction = true
@@ -162,8 +179,35 @@ func (c *CPU) Step() error {
 		operand := DecodeTable_R[z]
 		c.DoALUOperation(operation, c.Get8bitRegister(operand))
 	} else if x == 3 {
-		if z == 1 {
-			// TODO
+		if z == 0 {
+			// ret cc[y]
+			validInstruction = true
+			if c.ConditionMet(DecodeTable_CC[y]) {
+				low := c.Pop()
+				high := c.Pop()
+				c.PC = (uint16(high) << 8) | uint16(low)
+				shouldIncrementPC = false
+			}
+		} else if z == 1 {
+			if q == 0 {
+				// pop rp2[p]
+				validInstruction = true
+				low := c.Pop()
+				high := c.Pop()
+				value := (uint16(high) << 8) | uint16(low)
+				c.Set16bitRegister(DecodeTable_RP2[p], value)
+			} else if q == 1 {
+				if p == 0 {
+					// ret
+					validInstruction = true
+					low := c.Pop()
+					high := c.Pop()
+					c.PC = (uint16(high) << 8) | uint16(low)
+					shouldIncrementPC = false
+				} else {
+					// TODO
+				}
+			}
 		} else if z == 2 {
 			// jp cc[y], nn
 			validInstruction = true
@@ -194,14 +238,40 @@ func (c *CPU) Step() error {
 			} else if y == 5 {
 				// TODO
 			} else if y == 6 {
-				// TODO
+				// di
+				validInstruction = true
+				// interrupts are not used, so no-op
 			} else if y == 7 {
-				// TODO
+				// ei
+				validInstruction = true
+				// interrupts are not used, so no-op
 			}
 		} else if z == 4 {
 			// TODO
 		} else if z == 5 {
-			// TODO
+			if q == 0 {
+				// push rp2[p]
+				validInstruction = true
+				value := c.Get16bitRegister(DecodeTable_RP2[p])
+				c.Push(uint8((value & 0xFF00) >> 8))
+				c.Push(uint8(value & 0xFF))
+			} else if q == 1 {
+				if p == 0 {
+					// call nn
+					validInstruction = true
+					
+					returnAddress := c.PC + 3
+					c.Push(uint8((returnAddress & 0xFF00) >> 8))
+					c.Push(uint8(returnAddress & 0xFF))
+					
+					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1))
+					shouldIncrementPC = false
+
+					instructionLength = 3
+				}
+				// if p != 0 and we're here, it's a prefix which should have been caught earlier
+				// so just ignore it
+			}
 		} else if z == 6 {
 			// alu[y] n
 			validInstruction = true
@@ -210,7 +280,10 @@ func (c *CPU) Step() error {
 			c.DoALUOperation(operation, operand)
 			instructionLength = 2
 		} else if z == 7 {
-			// TODO
+			// rst y*8
+			validInstruction = true
+			c.PC = uint16(y)*8
+			shouldIncrementPC = false
 		}
 	}
 

@@ -2,9 +2,11 @@ package main
 
 import (
     "bufio"
+	// "io/ioutil"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/thatoddmailbox/minemu/bus"
 	"github.com/thatoddmailbox/minemu/cpu"
@@ -53,19 +55,35 @@ func main() {
 	// bus.ROM[4] = 0xC6 // add a, n
 	// bus.ROM[5] = 0x7D
 
-	loadHexFile("tinybas.hex", &bus)
+	loadHexFile("basic.hex", &bus)
+	// ioutil.WriteFile("out.bin", bus.ROM[:], 0644)
 
-	cpu := cpu.CPU{}
-	cpu.Bus = bus
+	sim := cpu.CPU{}
+	sim.Bus = bus
 
-	for i := 0; i <= 200; i++ {
-		// log.Printf("%+v", cpu.Registers)
-		err := cpu.Step()
+	sim.PC = 0x1000
+
+	for i := 0; i <= 20000; i++ {
+		instruction := sim.Bus.ReadMemoryByte(sim.PC)
+
+		info := cpu.DisassemblyTable_Unprefixed[instruction]
+		formattedParams := info.Parameters
+		if info.DataBytes == 1 {
+			data := uint64(sim.Bus.ReadMemoryByte(sim.PC + 1))
+			formattedParams = strings.Replace(formattedParams, "%d8", "0x" + strconv.FormatUint(data, 16), -1)
+		} else if info.DataBytes == 2 {
+			data := uint64((uint16(sim.Bus.ReadMemoryByte(sim.PC + 2)) << 8) | uint16(sim.Bus.ReadMemoryByte(sim.PC + 1)))
+			formattedParams = strings.Replace(formattedParams, "%d16", "0x" + strconv.FormatUint(data, 16), -1)
+		}
+
+		err := sim.Step()
 		if err != nil {
+			log.Printf("%s %s", info.Mnemonic, formattedParams)
+			log.Printf("%+v", sim.Registers)
 			panic(err)
 		}
 	}
-	log.Printf("%+v", cpu.Registers)
+	log.Printf("%+v", sim.Registers)
 }
 
 // func sdlTest() {

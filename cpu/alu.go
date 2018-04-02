@@ -23,6 +23,7 @@ func (c *CPU) Subtract8WithFlags(a uint8, b uint8) uint8 {
 }
 
 func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
+	var result uint8
 	switch op {
 	case ALUOperationAdd:
 		c.Registers.A = c.Add8WithFlags(c.Registers.A, operand)
@@ -35,9 +36,16 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 	case ALUOperationAnd:
 		panic("cpu: unimplemented alu operation")
 	case ALUOperationXor:
-		panic("cpu: unimplemented alu operation")
+		result = c.Registers.A ^ operand
 	case ALUOperationOr:
-		result := c.Registers.A | operand
+		result = c.Registers.A | operand
+	case ALUOperationCp:
+		c.Subtract8WithFlags(c.Registers.A, operand)
+	default:
+		panic("cpu: unknown operation type passed to DoALUOperation")
+	}
+
+	if op == ALUOperationOr || op == ALUOperationXor {
 		c.setFlag(FlagCarry, false)
 		c.setFlag(FlagZero, (result == 0))
 		c.setFlag(FlagParityOverflow, calcParity(result))
@@ -45,9 +53,5 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 		c.setFlag(FlagSubtract, false)
 		c.setFlag(FlagHalfCarry, false)
 		c.Registers.A = result
-	case ALUOperationCp:
-		panic("cpu: unimplemented alu operation")
-	default:
-		panic("cpu: unknown operation type passed to DoALUOperation")
 	}
 }
