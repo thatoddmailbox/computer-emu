@@ -240,7 +240,7 @@ var DisassemblyTable_Unprefixed = map[uint8]InstructionInfo {
 	0xE6: InstructionInfo{"and", "%d8", 1},
 	0xE7: InstructionInfo{"rst", "0x20", 0},
 	0xE8: InstructionInfo{"ret", "pe", 0},
-	0xE9: InstructionInfo{"jp", "(hl)", 0},
+	0xE9: InstructionInfo{"jp", "hl", 0},
 	0xEA: InstructionInfo{"jp", "pe, %d16", 2},
 	0xEB: InstructionInfo{"ex", "de, hl", 0},
 	0xEC: InstructionInfo{"call", "pe, %d16", 2},

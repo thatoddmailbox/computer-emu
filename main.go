@@ -43,6 +43,15 @@ func loadHexFile(path string, bus *bus.EmulatorBus) {
     }
 }
 
+func loadBinFile(path string, bus *bus.EmulatorBus) {
+	file, err := os.Open(path)
+    if err != nil {
+        log.Fatal(err)
+    }
+	defer file.Close()
+	file.Read(bus.ROM[:])
+}
+
 func main() {
 	log.Println("test")
 
@@ -55,15 +64,15 @@ func main() {
 	// bus.ROM[4] = 0xC6 // add a, n
 	// bus.ROM[5] = 0x7D
 
-	loadHexFile("basic.hex", &bus)
+	loadHexFile("tinybas.hex", &bus)
 	// ioutil.WriteFile("out.bin", bus.ROM[:], 0644)
 
 	sim := cpu.CPU{}
 	sim.Bus = bus
 
-	sim.PC = 0x1000
+	// sim.PC = 0x1000
 
-	for i := 0; i <= 20000; i++ {
+	for {
 		instruction := sim.Bus.ReadMemoryByte(sim.PC)
 
 		info := cpu.DisassemblyTable_Unprefixed[instruction]

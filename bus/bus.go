@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	ROMSize = 16*1024
-	RAMSize = 48*1024
+	ROMSize = 32*1024
+	RAMSize = 32*1024
 )
 
 type BusIO interface {

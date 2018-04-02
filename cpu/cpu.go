@@ -89,8 +89,16 @@ func (c *CPU) Step() error {
 				validInstruction = true
 				c.Set16bitRegister(DecodeTable_RP[p], registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)))
 				instructionLength = 3
+			} else if q == 1 {
+				// add hl, rp[p]
+				validInstruction = true
+				hl := c.Get16bitRegister(RegisterPairHL)
+				operand := c.Get16bitRegister(DecodeTable_RP[p])
+				result := hl + operand
+				resultNoOverflow := uint32(hl) + uint32(operand)
+				c.Set16bitRegister(RegisterPairHL, result)
+				c.setFlag(FlagCarry, (resultNoOverflow & (1 << 16) != 0))
 			}
-			// TODO: q == 1
 		} else if z == 2 {
 			if q == 0 {
 				if p == 0 {
@@ -160,6 +168,53 @@ func (c *CPU) Step() error {
 			validInstruction = true
 			c.Set8bitRegister(DecodeTable_R[y], c.Bus.ReadMemoryByte(c.PC + 1))
 			instructionLength = 2
+		} else if z == 7 {
+			if y == 0 {
+				// rlca
+				validInstruction = true
+				msb := c.Registers.A & (1 << 7)
+				c.setFlag(FlagCarry, msb != 0)
+				c.Registers.A = c.Registers.A << 1
+				if msb != 0 {
+					c.Registers.A |= 1
+				}
+			} else if y == 1 {
+				// TODO
+			} else if y == 2 {
+				// rla
+				validInstruction = true
+				msb := c.Registers.A & (1 << 7)
+				c.Registers.A = c.Registers.A << 1
+				if c.getFlag(FlagCarry) {
+					c.Registers.A |= 1
+				}
+				c.setFlag(FlagCarry, msb != 0)
+			} else if y == 3 {
+				// rra
+				validInstruction = true
+				lsb := c.Registers.A & 1
+				c.Registers.A = c.Registers.A >> 1
+				if c.getFlag(FlagCarry) {
+					c.Registers.A |= (1 << 7)
+				}
+				c.setFlag(FlagCarry, lsb != 0)
+			} else if y == 4 {
+				// TODO
+			} else if y == 5 {
+				// cpl
+				validInstruction = true
+				c.Registers.A = ^c.Registers.A
+			} else if y == 6 {
+				// scf
+				validInstruction = true
+				c.setFlag(FlagCarry, true)
+				c.setFlag(FlagSubtract, false)
+			} else if y == 7 {
+				// ccf
+				validInstruction = true
+				c.setFlag(FlagCarry, !c.getFlag(FlagCarry))
+				c.setFlag(FlagSubtract, false)
+			}
 		}
 	} else if x == 1 {
 		if z == 6 && y == 6 {
@@ -204,7 +259,14 @@ func (c *CPU) Step() error {
 					high := c.Pop()
 					c.PC = (uint16(high) << 8) | uint16(low)
 					shouldIncrementPC = false
-				} else {
+				} else if p == 1 {
+					// TODO
+				} else if p == 2 {
+					// jp hl
+					validInstruction = true
+					c.PC = registerPair(c.Registers.H, c.Registers.L)
+					shouldIncrementPC = false
+				} else if p == 3 {
 					// TODO
 				}
 			}
@@ -217,7 +279,6 @@ func (c *CPU) Step() error {
 			}
 			instructionLength = 3
 		} else if z == 3 {
-			// TODO: y != 2
 			if y == 0 {
 				// jp nn
 				validInstruction = true
@@ -234,9 +295,23 @@ func (c *CPU) Step() error {
 			} else if y == 3 {
 				// TODO
 			} else if y == 4 {
-				// TODO
+				// ex [sp], hl
+				validInstruction = true
+				swapHigh := c.Bus.ReadMemoryByte(c.Registers.SP + 1)
+				swapLow := c.Bus.ReadMemoryByte(c.Registers.SP)
+				c.Bus.WriteMemoryByte(c.Registers.SP + 1, c.Registers.H)
+				c.Bus.WriteMemoryByte(c.Registers.SP, c.Registers.L)
+				c.Registers.H = swapHigh
+				c.Registers.L = swapLow
 			} else if y == 5 {
-				// TODO
+				// ex de, hl
+				validInstruction = true
+				swapHigh := c.Registers.D
+				swapLow := c.Registers.E
+				c.Registers.D = c.Registers.H
+				c.Registers.E = c.Registers.L
+				c.Registers.H = swapHigh
+				c.Registers.L = swapLow
 			} else if y == 6 {
 				// di
 				validInstruction = true
@@ -247,7 +322,19 @@ func (c *CPU) Step() error {
 				// interrupts are not used, so no-op
 			}
 		} else if z == 4 {
-			// TODO
+			// call cc[y], nn
+			validInstruction = true
+			
+			if c.ConditionMet(DecodeTable_CC[y]) {
+				returnAddress := c.PC + 3
+				c.Push(uint8((returnAddress & 0xFF00) >> 8))
+				c.Push(uint8(returnAddress & 0xFF))
+				
+				c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1))
+				shouldIncrementPC = false
+			}
+
+			instructionLength = 3
 		} else if z == 5 {
 			if q == 0 {
 				// push rp2[p]

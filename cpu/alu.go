@@ -28,13 +28,21 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 	case ALUOperationAdd:
 		c.Registers.A = c.Add8WithFlags(c.Registers.A, operand)
 	case ALUOperationAdc:
-		panic("cpu: unimplemented alu operation")
+		carry := uint8(0)
+		if c.getFlag(FlagCarry) {
+			carry = 1
+		}
+		c.Registers.A = c.Add8WithFlags(c.Registers.A, operand + carry)
 	case ALUOperationSub:
 		c.Registers.A = c.Subtract8WithFlags(c.Registers.A, operand)
 	case ALUOperationSbc:
-		panic("cpu: unimplemented alu operation")
+		carry := uint8(0)
+		if c.getFlag(FlagCarry) {
+			carry = 1
+		}
+		c.Registers.A = c.Subtract8WithFlags(c.Registers.A, operand + carry)
 	case ALUOperationAnd:
-		panic("cpu: unimplemented alu operation")
+		result = c.Registers.A & operand
 	case ALUOperationXor:
 		result = c.Registers.A ^ operand
 	case ALUOperationOr:
@@ -45,7 +53,7 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 		panic("cpu: unknown operation type passed to DoALUOperation")
 	}
 
-	if op == ALUOperationOr || op == ALUOperationXor {
+	if op == ALUOperationAnd || op == ALUOperationXor || op == ALUOperationOr {
 		c.setFlag(FlagCarry, false)
 		c.setFlag(FlagZero, (result == 0))
 		c.setFlag(FlagParityOverflow, calcParity(result))
