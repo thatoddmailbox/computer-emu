@@ -40,10 +40,6 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 		if c.getFlag(FlagCarry) {
 			carry = 1
 		}
-		// println("sbc")
-		// println(c.Registers.A)
-		// println(operand)
-		// println(carry)
 		c.Registers.A = c.Subtract8WithFlags(c.Registers.A, operand + carry)
 	case ALUOperationAnd:
 		result = c.Registers.A & operand
@@ -66,4 +62,24 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 		c.setFlag(FlagHalfCarry, false)
 		c.Registers.A = result
 	}
+}
+
+func (c *CPU) DoALUShiftOperation(op ALUShiftOperationType, input uint8) uint8 {
+	var result uint8
+	switch op {
+	case ALUShiftOperationSra:
+		c.setFlag(FlagCarry, (result & 1) != 0)
+		result = input >> 1
+		result |= ((input & (1 << 6)) << 1)
+	default:
+		panic("cpu: unknown operation type passed to DoALUShiftOperation")
+	}
+
+	c.setFlag(FlagZero, (result == 0))
+	c.setFlag(FlagParityOverflow, calcParity(result))
+	c.setFlag(FlagSign, (result & (1 << 7) != 0))
+	c.setFlag(FlagSubtract, false)
+	c.setFlag(FlagHalfCarry, false)
+
+	return result
 }

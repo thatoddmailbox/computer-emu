@@ -65,10 +65,10 @@ func main() {
 	defer (func() {
 		err := recover()
 		if err != nil {
-			info, disassembly := cpu.Disassemble(sim, sim.PC)
+			info, disassembly, bytes := cpu.DisassembleInstructionAt(sim, sim.PC)
 
 			log.Println("PANIC")
-			log.Printf("%s %s", info.Mnemonic, disassembly)
+			log.Printf("%s %s (%d bytes)", info.Mnemonic, disassembly, bytes)
 			log.Printf("PC: 0x%x", sim.PC)
 			log.Printf("Registers: %+v", sim.Registers)
 			log.Println(err)
@@ -76,10 +76,10 @@ func main() {
 	})()
 
 	for {
-		info, disassembly := cpu.Disassemble(sim, sim.PC)
+		// info, disassembly, bytes := cpu.DisassembleInstructionAt(sim, sim.PC)
 
-		log.Printf("%s %s", info.Mnemonic, disassembly)
-		log.Printf("%+v", sim.Registers)
+		// log.Printf("%s %s (%d bytes)", info.Mnemonic, disassembly, bytes)
+		// log.Printf("%+v", sim.Registers)
 
 		err := sim.Step()
 		if err != nil {

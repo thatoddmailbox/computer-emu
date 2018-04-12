@@ -1,15 +1,19 @@
 package io
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 )
 
 type UART struct {
-	
+	reader *bufio.Reader
 }
 
 func NewUART() *UART {
-	return &UART{}
+	return &UART{
+		reader: bufio.NewReader(os.Stdin),
+	}
 }
 
 func (u *UART) IsMapped(address uint8) bool {
@@ -23,11 +27,16 @@ func (u *UART) ReadByte(address uint8) uint8 {
 	maskedAddress := address & 1
 	if maskedAddress == 0 {
 		// data
-		
+		b, _ := u.reader.ReadByte()
+		return b
 	} else {
 		// control/status
+		flags := uint8(0)
+		if u.reader.Buffered() > 0 {
+			flags |= (1 << 1)
+		}
+		return flags
 	}
-	return 0xFF
 }
 
 func (u *UART) WriteByte(address uint8, data uint8) {

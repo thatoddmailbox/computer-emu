@@ -1,6 +1,7 @@
 package cpu
 
 type ALUOperationType int
+type ALUShiftOperationType int
 type ConditionCodeType int
 type Register8bitType int
 type RegisterPairType int
@@ -14,6 +15,17 @@ const (
 	ALUOperationXor
 	ALUOperationOr
 	ALUOperationCp
+)
+
+const (
+	ALUShiftOperationRlc ALUShiftOperationType = iota
+	ALUShiftOperationRrc
+	ALUShiftOperationRl
+	ALUShiftOperationRr
+	ALUShiftOperationSla
+	ALUShiftOperationSra
+	ALUShiftOperationSll
+	ALUShiftOperationSrl
 )
 
 const (

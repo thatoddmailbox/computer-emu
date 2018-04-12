@@ -46,3 +46,14 @@ var DecodeTable_ALU = map[uint8]ALUOperationType{
 	6: ALUOperationOr,
 	7: ALUOperationCp,
 }
+
+var DecodeTable_ROT = map[uint8]ALUShiftOperationType{
+	0: ALUShiftOperationRlc,
+	1: ALUShiftOperationRrc,
+	2: ALUShiftOperationRl,
+	3: ALUShiftOperationRr,
+	4: ALUShiftOperationSla,
+	5: ALUShiftOperationSra,
+	6: ALUShiftOperationSll,
+	7: ALUShiftOperationSrl,
+}
