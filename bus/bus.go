@@ -1,24 +1,26 @@
 package bus
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-)
-
 const (
 	ROMSize = 8*1024
 	RAMSize = 4*1024
 )
 
-type BusIO interface {
+type BusMemoryIODevice interface {
+	IsMapped(address uint16) bool
 	ReadByte(address uint16) uint8
 	WriteByte(address uint16, data uint8)
+}
+
+type BusDataIODevice interface {
+	IsMapped(address uint8) bool
+	ReadByte(address uint8) uint8
+	WriteByte(address uint8, data uint8)
 }
 
 type EmulatorBus struct {
 	ROM [ROMSize]byte
 	RAM [RAMSize]byte
+	DataDevices []BusDataIODevice
 }
 
 func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
@@ -44,9 +46,20 @@ func (b *EmulatorBus) WriteMemoryByte(address uint16, data uint8) {
 }
 
 func (b *EmulatorBus) ReadIOByte(address uint8) uint8 {
-	return 0
+	for _, device := range b.DataDevices {
+		if device.IsMapped(address) {
+			return device.ReadByte(address)
+		}
+	}
+	panic("bus: read from unmapped IO")
 }
 
 func (b *EmulatorBus) WriteIOByte(address uint8, data uint8) {
-	fmt.Print(string(data))
+	for _, device := range b.DataDevices {
+		if device.IsMapped(address) {
+			device.WriteByte(address, data)
+			return
+		}
+	}
+	panic("bus: write to unmapped IO")
 }
