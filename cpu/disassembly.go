@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func DisassembleInstructionAt(sim CPU, pc uint16) (InstructionInfo, string, uint8) {
+func DisassembleInstructionAt(sim *CPU, pc uint16) (InstructionInfo, string, uint8) {
 	instruction := sim.Bus.ReadMemoryByte(pc)
 	table := DisassemblyTable_Unprefixed
 	instructionOffset := 0

@@ -5,11 +5,12 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/thatoddmailbox/minemu/bus"
+	"github.com/thatoddmailbox/minemu/debugger"
 	"github.com/thatoddmailbox/minemu/cpu"
 	"github.com/thatoddmailbox/minemu/io"
-	// "github.com/veandco/go-sdl2/sdl"
 )
 
 func loadHexFile(path string, bus *bus.EmulatorBus) {
@@ -61,7 +62,16 @@ func main() {
 
 	sim := cpu.CPU{}
 	sim.Bus = bus
+	cpuMutex := sync.Mutex{}
 
+	dbg := debugger.NewDebugger(&sim, &cpuMutex)
+	dbg.SingleStep = true
+
+	go cpuRoutine(&sim, &cpuMutex, dbg)
+	dbg.Loop()
+}
+
+func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
 	defer (func() {
 		err := recover()
 		if err != nil {
@@ -75,7 +85,13 @@ func main() {
 		}
 	})()
 
+	cycle := 0
 	for {
+		if dbg.SingleStep {
+			<-dbg.StepChannel
+		}
+
+		cpuMutex.Lock()
 		// info, disassembly, bytes := cpu.DisassembleInstructionAt(sim, sim.PC)
 
 		// log.Printf("%s %s (%d bytes)", info.Mnemonic, disassembly, bytes)
@@ -85,42 +101,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		cpuMutex.Unlock()
+
+		if !dbg.SingleStep {
+			cycle += 1
+			if cycle > 1000 {
+				cycle = 0
+			}
+		}
 	}
-	log.Printf("%+v", sim.Registers)
 }
-
-// func sdlTest() {
-// 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
-// 		panic(err)
-// 	}
-// 	defer sdl.Quit()
-
-// 	window, err := sdl.CreateWindow("test", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-// 		800, 600, sdl.WINDOW_SHOWN)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer window.Destroy()
-
-// 	surface, err := window.GetSurface()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	surface.FillRect(nil, 0)
-
-// 	rect := sdl.Rect{0, 0, 200, 200}
-// 	surface.FillRect(&rect, 0xffff0000)
-// 	window.UpdateSurface()
-
-// 	running := true
-// 	for running {
-// 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-// 			switch event.(type) {
-// 			case *sdl.QuitEvent:
-// 				println("Quit")
-// 				running = false
-// 				break
-// 			}
-// 		}
-// 	}
-// }

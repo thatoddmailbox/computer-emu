@@ -35,6 +35,7 @@ func (u *UART) ReadByte(address uint8) uint8 {
 		if u.reader.Buffered() > 0 {
 			flags |= (1 << 1)
 		}
+		flags |= (1) // txrdy
 		return flags
 	}
 }
