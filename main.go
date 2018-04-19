@@ -56,7 +56,7 @@ func main() {
 
 	bus := bus.EmulatorBus{}
 
-	bus.DataDevices = append(bus.DataDevices, io.NewUART())
+	bus.DataDevices = append(bus.DataDevices, io.NewI8251())
 
 	loadBinFile("prg.bin", &bus)
 

@@ -6,24 +6,24 @@ import (
 	"os"
 )
 
-type UART struct {
+type I8251 struct {
 	reader *bufio.Reader
 }
 
-func NewUART() *UART {
-	return &UART{
+func NewI8251() *I8251 {
+	return &I8251{
 		reader: bufio.NewReader(os.Stdin),
 	}
 }
 
-func (u *UART) IsMapped(address uint8) bool {
-	if (address & (1 << 7) == 0) && (address & (1 << 6) == 0) {
+func (u *I8251) IsMapped(address uint8) bool {
+	if (address&(1<<7) == 0) && (address&(1<<6) == 0) {
 		return true
 	}
 	return false
 }
 
-func (u *UART) ReadByte(address uint8) uint8 {
+func (u *I8251) ReadByte(address uint8) uint8 {
 	maskedAddress := address & 1
 	if maskedAddress == 0 {
 		// data
@@ -40,7 +40,7 @@ func (u *UART) ReadByte(address uint8) uint8 {
 	}
 }
 
-func (u *UART) WriteByte(address uint8, data uint8) {
+func (u *I8251) WriteByte(address uint8, data uint8) {
 	maskedAddress := address & 1
 	if maskedAddress == 0 {
 		// data
