@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/thatoddmailbox/minemu/bus"
-	"github.com/thatoddmailbox/minemu/debugger"
 	"github.com/thatoddmailbox/minemu/cpu"
+	"github.com/thatoddmailbox/minemu/debugger"
 	"github.com/thatoddmailbox/minemu/io"
 )
 
@@ -65,10 +65,12 @@ func main() {
 	cpuMutex := sync.Mutex{}
 
 	dbg := debugger.NewDebugger(&sim, &cpuMutex)
-	dbg.SingleStep = true
+	// dbg.SingleStep = true
 
-	go cpuRoutine(&sim, &cpuMutex, dbg)
-	dbg.Loop()
+	dbg.Loop(func() {
+		sim.Bus.DataDevices = append(sim.Bus.DataDevices, io.NewST7565P())
+		go cpuRoutine(&sim, &cpuMutex, dbg)
+	})
 }
 
 func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
@@ -97,7 +99,9 @@ func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
 		// log.Printf("%s %s (%d bytes)", info.Mnemonic, disassembly, bytes)
 		// log.Printf("%+v", sim.Registers)
 
-		err := sim.Step()
+		err := sim.Step(func() {
+			dbg.SingleStep = true
+		})
 		if err != nil {
 			panic(err)
 		}

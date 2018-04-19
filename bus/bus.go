@@ -1,8 +1,8 @@
 package bus
 
 const (
-	ROMSize = 8*1024
-	RAMSize = 4*1024
+	ROMSize = 8 * 1024
+	RAMSize = 4 * 1024
 )
 
 type BusMemoryIODevice interface {
@@ -18,8 +18,8 @@ type BusDataIODevice interface {
 }
 
 type EmulatorBus struct {
-	ROM [ROMSize]byte
-	RAM [RAMSize]byte
+	ROM         [ROMSize]byte
+	RAM         [RAMSize]byte
 	DataDevices []BusDataIODevice
 }
 

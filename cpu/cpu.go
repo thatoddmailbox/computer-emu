@@ -10,7 +10,7 @@ import (
 var ErrNotImplemented = errors.New("cpu: instruction not implemented")
 
 type CPU struct {
-	Bus bus.EmulatorBus
+	Bus             bus.EmulatorBus
 	Registers       RegisterFile
 	ShadowRegisters RegisterFile
 	PC              uint16
@@ -64,7 +64,7 @@ func (c *CPU) Pop() uint8 {
 	return data
 }
 
-func (c *CPU) Step() error {
+func (c *CPU) Step(breakpointTrigger func()) error {
 	instruction := c.Bus.ReadMemoryByte(c.PC)
 	instructionLength := 1
 
@@ -79,14 +79,14 @@ func (c *CPU) Step() error {
 	} else if instruction == 0xDD {
 		prefix = 0xDD
 		instructionLength += 1
-		if c.Bus.ReadMemoryByte(c.PC + 1) == 0xCB {
+		if c.Bus.ReadMemoryByte(c.PC+1) == 0xCB {
 			prefix = 0xDDCB
 			instructionLength += 1
 		}
 	} else if instruction == 0xFD {
 		prefix = 0xFD
 		instructionLength += 1
-		if c.Bus.ReadMemoryByte(c.PC + 1) == 0xCB {
+		if c.Bus.ReadMemoryByte(c.PC+1) == 0xCB {
 			prefix = 0xFDCB
 			instructionLength += 1
 		}
@@ -95,7 +95,7 @@ func (c *CPU) Step() error {
 	if instructionLength > 1 {
 		instruction = c.Bus.ReadMemoryByte(c.PC + uint16(instructionLength) - 1)
 	}
-	
+
 	x := (instruction & 0xC0) >> 6 // 0b11000000
 	y := (instruction & 0x38) >> 3 // 0b00111000
 	z := (instruction & 0x07)      // 0b00000111
@@ -117,7 +117,7 @@ func (c *CPU) Step() error {
 				if q == 0 {
 					// ld rp[p], nn
 					validInstruction = true
-					c.Set16bitRegister(DecodeTable_RP[p], registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)))
+					c.Set16bitRegister(DecodeTable_RP[p], registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1)))
 					instructionLength += 2
 				} else if q == 1 {
 					// add hl, rp[p]
@@ -127,7 +127,7 @@ func (c *CPU) Step() error {
 					result := hl + operand
 					resultNoOverflow := uint32(hl) + uint32(operand)
 					c.Set16bitRegister(RegisterPairHL, result)
-					c.setFlag(FlagCarry, (resultNoOverflow & (1 << 16) != 0))
+					c.setFlag(FlagCarry, (resultNoOverflow&(1<<16) != 0))
 				}
 			} else if z == 2 {
 				if q == 0 {
@@ -142,13 +142,13 @@ func (c *CPU) Step() error {
 					} else if p == 2 {
 						// ld [nn], hl
 						validInstruction = true
-						c.Bus.WriteMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)), c.Registers.L)
-						c.Bus.WriteMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)) + 1, c.Registers.H)
+						c.Bus.WriteMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1)), c.Registers.L)
+						c.Bus.WriteMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1))+1, c.Registers.H)
 						instructionLength += 2
 					} else if p == 3 {
 						// ld [nn], a
 						validInstruction = true
-						c.Bus.WriteMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)), c.Registers.A)
+						c.Bus.WriteMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1)), c.Registers.A)
 						instructionLength += 2
 					}
 				} else if q == 1 {
@@ -163,13 +163,13 @@ func (c *CPU) Step() error {
 					} else if p == 2 {
 						// ld hl, [nn]
 						validInstruction = true
-						c.Registers.L = c.Bus.ReadMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)))
-						c.Registers.H = c.Bus.ReadMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)) + 1)
+						c.Registers.L = c.Bus.ReadMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1)))
+						c.Registers.H = c.Bus.ReadMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1)) + 1)
 						instructionLength += 2
 					} else if p == 3 {
 						// ld a, [nn]
 						validInstruction = true
-						c.Registers.A = c.Bus.ReadMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1)))
+						c.Registers.A = c.Bus.ReadMemoryByte(registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1)))
 						instructionLength += 2
 					}
 				}
@@ -177,11 +177,11 @@ func (c *CPU) Step() error {
 				if q == 0 {
 					// inc rp[p]
 					validInstruction = true
-					c.Set16bitRegister(DecodeTable_RP[p], c.Get16bitRegister(DecodeTable_RP[p]) + 1)
+					c.Set16bitRegister(DecodeTable_RP[p], c.Get16bitRegister(DecodeTable_RP[p])+1)
 				} else if q == 1 {
 					// dec rp[p]
 					validInstruction = true
-					c.Set16bitRegister(DecodeTable_RP[p], c.Get16bitRegister(DecodeTable_RP[p]) - 1)
+					c.Set16bitRegister(DecodeTable_RP[p], c.Get16bitRegister(DecodeTable_RP[p])-1)
 				}
 			} else if z == 4 {
 				// inc r[y]
@@ -196,7 +196,7 @@ func (c *CPU) Step() error {
 			} else if z == 6 {
 				// ld r[y], n
 				validInstruction = true
-				c.Set8bitRegister(DecodeTable_R[y], c.Bus.ReadMemoryByte(c.PC + 1))
+				c.Set8bitRegister(DecodeTable_R[y], c.Bus.ReadMemoryByte(c.PC+1))
 				instructionLength += 1
 			} else if z == 7 {
 				if y == 0 {
@@ -255,6 +255,10 @@ func (c *CPU) Step() error {
 				validInstruction = true
 				target := DecodeTable_R[y]
 				source := DecodeTable_R[z]
+				if target == RegisterB && source == RegisterB {
+					// it's a breakpoint
+					breakpointTrigger()
+				}
 				c.Set8bitRegister(target, c.Get8bitRegister(source))
 			}
 		} else if x == 2 {
@@ -304,7 +308,7 @@ func (c *CPU) Step() error {
 				// jp cc[y], nn
 				validInstruction = true
 				if c.ConditionMet(DecodeTable_CC[y]) {
-					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1))
+					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1))
 					shouldIncrementPC = false
 				}
 				instructionLength += 2
@@ -312,7 +316,7 @@ func (c *CPU) Step() error {
 				if y == 0 {
 					// jp nn
 					validInstruction = true
-					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1))
+					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1))
 					shouldIncrementPC = false
 					instructionLength += 2
 				} else if y == 1 {
@@ -320,7 +324,7 @@ func (c *CPU) Step() error {
 				} else if y == 2 {
 					// out [n], a
 					validInstruction = true
-					c.Bus.WriteIOByte(c.Bus.ReadMemoryByte(c.PC + 1), c.Registers.A)
+					c.Bus.WriteIOByte(c.Bus.ReadMemoryByte(c.PC+1), c.Registers.A)
 					instructionLength += 1
 				} else if y == 3 {
 					// in a, [n]
@@ -332,7 +336,7 @@ func (c *CPU) Step() error {
 					validInstruction = true
 					swapHigh := c.Bus.ReadMemoryByte(c.Registers.SP + 1)
 					swapLow := c.Bus.ReadMemoryByte(c.Registers.SP)
-					c.Bus.WriteMemoryByte(c.Registers.SP + 1, c.Registers.H)
+					c.Bus.WriteMemoryByte(c.Registers.SP+1, c.Registers.H)
 					c.Bus.WriteMemoryByte(c.Registers.SP, c.Registers.L)
 					c.Registers.H = swapHigh
 					c.Registers.L = swapLow
@@ -357,13 +361,13 @@ func (c *CPU) Step() error {
 			} else if z == 4 {
 				// call cc[y], nn
 				validInstruction = true
-				
+
 				if c.ConditionMet(DecodeTable_CC[y]) {
 					returnAddress := c.PC + 3
 					c.Push(uint8((returnAddress & 0xFF00) >> 8))
 					c.Push(uint8(returnAddress & 0xFF))
-					
-					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1))
+
+					c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1))
 					shouldIncrementPC = false
 				}
 
@@ -379,12 +383,12 @@ func (c *CPU) Step() error {
 					if p == 0 {
 						// call nn
 						validInstruction = true
-						
+
 						returnAddress := c.PC + 3
 						c.Push(uint8((returnAddress & 0xFF00) >> 8))
 						c.Push(uint8(returnAddress & 0xFF))
-						
-						c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC + 2), c.Bus.ReadMemoryByte(c.PC + 1))
+
+						c.PC = registerPair(c.Bus.ReadMemoryByte(c.PC+2), c.Bus.ReadMemoryByte(c.PC+1))
 						shouldIncrementPC = false
 
 						instructionLength += 2
@@ -405,7 +409,7 @@ func (c *CPU) Step() error {
 				returnAddress := c.PC + 1
 				c.Push(uint8((returnAddress & 0xFF00) >> 8))
 				c.Push(uint8(returnAddress & 0xFF))
-				c.PC = uint16(y)*8
+				c.PC = uint16(y) * 8
 				shouldIncrementPC = false
 			}
 		}

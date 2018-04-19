@@ -54,7 +54,7 @@ func (d *Debugger) drawText(renderer *sdl.Renderer, font *ttf.Font, text string,
 	return nil
 }
 
-func (d *Debugger) Loop() {
+func (d *Debugger) Loop(callback func()) {
 	var runningMutex sync.Mutex
 
 	ttf.Init()
@@ -97,6 +97,8 @@ func (d *Debugger) Loop() {
 			renderer.Clear()
 		})
 
+		callback()
+
 		running := true
 
 		lastPC := uint16(0xFFFF)
@@ -104,8 +106,8 @@ func (d *Debugger) Loop() {
 		formattedParams := ""
 		dirty := true
 
-		disassemblyAddress := []uint16{}
-		disassemblyResults := []InstructionInfo{}
+		// disassemblyAddress := []uint16{}
+		// disassemblyResults := []cpu.InstructionInfo{}
 
 		for running {
 			sdl.Do(func() {
