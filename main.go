@@ -56,8 +56,6 @@ func main() {
 
 	bus := bus.EmulatorBus{}
 
-	bus.DataDevices = append(bus.DataDevices, io.NewI8251())
-
 	loadBinFile("prg.bin", &bus)
 
 	sim := cpu.CPU{}
@@ -68,7 +66,10 @@ func main() {
 	// dbg.SingleStep = true
 
 	dbg.Loop(func() {
-		sim.Bus.DataDevices = append(sim.Bus.DataDevices, io.NewST7565P())
+		pio := io.NewI8255()
+		sim.Bus.DataDevices = append(sim.Bus.DataDevices, io.NewST7565P(pio))
+		sim.Bus.DataDevices = append(sim.Bus.DataDevices, io.NewI8251())
+		sim.Bus.DataDevices = append(sim.Bus.DataDevices, pio)
 		go cpuRoutine(&sim, &cpuMutex, dbg)
 	})
 }

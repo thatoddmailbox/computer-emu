@@ -22,6 +22,8 @@ type ST7565P struct {
 	pageAddress          uint8
 	readModifyWrite      bool
 
+	pio *I8255
+
 	displayMutex  *sync.Mutex
 	displayRAM    [st7565p_page_width * (st7565p_page_count + 1)]byte
 	displayInvert bool
@@ -31,9 +33,10 @@ type ST7565P struct {
 	sdlSurface *sdl.Surface
 }
 
-func NewST7565P() *ST7565P {
+func NewST7565P(pio *I8255) *ST7565P {
 	newDevice := &ST7565P{
 		displayMutex: &sync.Mutex{},
+		pio:          pio,
 	}
 	sdl.Do(func() {
 		var err error
@@ -78,6 +81,56 @@ func (d *ST7565P) drawBigPixel(data []byte, x int, y int) {
 
 func (d *ST7565P) drawLoop() {
 	for {
+		sdl.Do(func() {
+			for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+				switch event.(type) {
+				case *sdl.KeyboardEvent:
+					e := event.(*sdl.KeyboardEvent)
+					windowId, err := d.sdlWindow.GetID()
+					if err != nil {
+						panic(err)
+					}
+					if e.WindowID != windowId {
+						continue
+					}
+					wasButtonEvent := false
+					buttonBit := uint8(0)
+					if e.Keysym.Sym == sdl.K_w {
+						// up
+						wasButtonEvent = true
+						buttonBit = 7
+					} else if e.Keysym.Sym == sdl.K_s {
+						// down
+						wasButtonEvent = true
+						buttonBit = 6
+					} else if e.Keysym.Sym == sdl.K_a {
+						// left
+						wasButtonEvent = true
+						buttonBit = 5
+					} else if e.Keysym.Sym == sdl.K_d {
+						// right
+						wasButtonEvent = true
+						buttonBit = 4
+					} else if e.Keysym.Sym == sdl.K_f {
+						// back
+						wasButtonEvent = true
+						buttonBit = 3
+					} else if e.Keysym.Sym == sdl.K_g {
+						// select
+						wasButtonEvent = true
+						buttonBit = 2
+					}
+					if wasButtonEvent {
+						if e.State == sdl.PRESSED {
+							d.pio.SetPortA(d.pio.GetPortA() | (1 << buttonBit))
+						} else if e.State == sdl.RELEASED {
+							d.pio.SetPortA(d.pio.GetPortA() & ^(1 << buttonBit))
+						}
+					}
+				}
+			}
+		})
+
 		d.displayMutex.Lock()
 
 		if d.displayDirty {
