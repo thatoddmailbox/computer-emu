@@ -10,7 +10,7 @@ import (
 	"github.com/thatoddmailbox/minemu/bus"
 	"github.com/thatoddmailbox/minemu/cpu"
 	"github.com/thatoddmailbox/minemu/debugger"
-	"github.com/thatoddmailbox/minemu/io"
+	"github.com/thatoddmailbox/minemu/devices"
 )
 
 func loadHexFile(path string, bus *bus.EmulatorBus) {
@@ -56,7 +56,7 @@ func main() {
 
 	bus := bus.EmulatorBus{}
 
-	loadBinFile("prg.bin", &bus)
+	loadBinFile("bank0.bin", &bus)
 
 	sim := cpu.CPU{}
 	sim.Bus = bus
@@ -66,10 +66,10 @@ func main() {
 	// dbg.SingleStep = true
 
 	dbg.Loop(func() {
-		pio := io.NewI8255()
-		sim.Bus.DataDevices = append(sim.Bus.DataDevices, io.NewST7565P(pio))
-		sim.Bus.DataDevices = append(sim.Bus.DataDevices, io.NewI8251())
-		sim.Bus.DataDevices = append(sim.Bus.DataDevices, pio)
+		pio := devices.NewI8255()
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, devices.NewST7565P(pio))
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, devices.NewI8251())
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, pio)
 		go cpuRoutine(&sim, &cpuMutex, dbg)
 	})
 }
@@ -78,11 +78,12 @@ func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
 	defer (func() {
 		err := recover()
 		if err != nil {
+			log.Println("PANIC")
+			log.Printf("PC: 0x%x", sim.PC)
+
 			info, disassembly, bytes := cpu.DisassembleInstructionAt(sim, sim.PC)
 
-			log.Println("PANIC")
 			log.Printf("%s %s (%d bytes)", info.Mnemonic, disassembly, bytes)
-			log.Printf("PC: 0x%x", sim.PC)
 			log.Printf("Registers: %+v", sim.Registers)
 			log.Println(err)
 		}

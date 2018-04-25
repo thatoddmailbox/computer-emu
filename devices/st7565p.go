@@ -1,4 +1,4 @@
-package io
+package devices
 
 import (
 	"errors"
@@ -175,8 +175,8 @@ func (d *ST7565P) drawLoop() {
 	}
 }
 
-func (d *ST7565P) IsMapped(address uint8) bool {
-	if (address&(1<<7) != 0) && (address&(1<<6) != 0) {
+func (d *ST7565P) IsMapped(address uint16) bool {
+	if (address&(1<<15) == 0) && (address&(1<<14) != 0) && (address&(1<<13) != 0) && (address&(1<<12) != 0) {
 		return true
 	}
 	return false
@@ -189,7 +189,7 @@ func (d *ST7565P) incrementColumn() {
 	}
 }
 
-func (d *ST7565P) ReadByte(address uint8) uint8 {
+func (d *ST7565P) ReadByte(address uint16) uint8 {
 	maskedAddress := address & 1
 	if maskedAddress == 0 {
 		// status read
@@ -213,7 +213,7 @@ func (d *ST7565P) ReadByte(address uint8) uint8 {
 	}
 }
 
-func (d *ST7565P) WriteByte(address uint8, data uint8) {
+func (d *ST7565P) WriteByte(address uint16, data uint8) {
 	maskedAddress := address & 1
 	if maskedAddress == 0 {
 		// command

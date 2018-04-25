@@ -18,9 +18,10 @@ type BusDataIODevice interface {
 }
 
 type EmulatorBus struct {
-	ROM         [ROMSize]byte
-	RAM         [RAMSize]byte
-	DataDevices []BusDataIODevice
+	ROM           [ROMSize]byte
+	RAM           [RAMSize]byte
+	MemoryDevices []BusMemoryIODevice
+	DataDevices   []BusDataIODevice
 }
 
 func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
@@ -30,17 +31,27 @@ func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
 	if address > 0xFFFF-RAMSize {
 		return b.RAM[address&(RAMSize-1)]
 	}
+	for _, device := range b.MemoryDevices {
+		if device.IsMapped(address) {
+			return device.ReadByte(address)
+		}
+	}
 	panic("bus: read from unmapped memory")
 }
 
 func (b *EmulatorBus) WriteMemoryByte(address uint16, data uint8) {
 	if address < ROMSize {
 		panic("bus: write to read-only memory")
-		return
 	}
 	if address > 0xFFFF-RAMSize {
 		b.RAM[address&(RAMSize-1)] = data
 		return
+	}
+	for _, device := range b.MemoryDevices {
+		if device.IsMapped(address) {
+			device.WriteByte(address, data)
+			return
+		}
 	}
 	panic("bus: write to unmapped memory")
 }

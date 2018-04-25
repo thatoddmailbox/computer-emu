@@ -1,4 +1,4 @@
-package io
+package devices
 
 import (
 	"errors"
@@ -53,14 +53,14 @@ func (p *I8255) SetPortB(port uint8) bool {
 	return false
 }
 
-func (p *I8255) IsMapped(address uint8) bool {
-	if (address&(1<<7) == 0) && (address&(1<<6) != 0) {
+func (p *I8255) IsMapped(address uint16) bool {
+	if (address&(1<<15) == 0) && (address&(1<<14) != 0) && (address&(1<<13) == 0) && (address&(1<<12) != 0) {
 		return true
 	}
 	return false
 }
 
-func (p *I8255) ReadByte(address uint8) uint8 {
+func (p *I8255) ReadByte(address uint16) uint8 {
 	maskedAddress := address & 3
 	if maskedAddress == 0 {
 		return p.portA
@@ -72,7 +72,7 @@ func (p *I8255) ReadByte(address uint8) uint8 {
 	return 0xFF // illegal condition
 }
 
-func (p *I8255) WriteByte(address uint8, data uint8) {
+func (p *I8255) WriteByte(address uint16, data uint8) {
 	maskedAddress := address & 3
 	if maskedAddress == 0 {
 		p.portA = data
