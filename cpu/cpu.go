@@ -422,6 +422,21 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 			value := c.Get8bitRegister(operand)
 			result := c.DoALUShiftOperation(operation, value)
 			c.Set8bitRegister(operand, result)
+		} else if x == 1 {
+			// bit y, r[z]
+			validInstruction = true
+			operand := DecodeTable_R[z]
+			value := c.Get8bitRegister(operand)
+			bitmask := uint8(1 << y)
+
+			c.setFlag(FlagHalfCarry, true)
+			c.setFlag(FlagSubtract, false)
+
+			if value&bitmask == 0 {
+				c.setFlag(FlagZero, true)
+			} else {
+				c.setFlag(FlagZero, false)
+			}
 		}
 	}
 
