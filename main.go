@@ -13,7 +13,7 @@ import (
 	"github.com/thatoddmailbox/minemu/devices"
 )
 
-func loadHexFile(path string, bus *bus.EmulatorBus) {
+func loadHexFile(path string, rom *devices.I2716) {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -28,7 +28,7 @@ func loadHexFile(path string, bus *bus.EmulatorBus) {
 		if recordType == 0 {
 			for i := uint64(0); i < byteCount; i += 1 {
 				dataByte, _ := strconv.ParseUint(scanner.Text()[9+(i*2):11+(i*2)], 16, 8)
-				bus.ROM[address+i] = uint8(dataByte)
+				rom.ROM[address+i] = uint8(dataByte)
 			}
 		} else if recordType == 1 {
 			break
@@ -42,21 +42,19 @@ func loadHexFile(path string, bus *bus.EmulatorBus) {
 	}
 }
 
-func loadBinFile(path string, bus *bus.EmulatorBus) {
+func loadBinFile(path string, rom *devices.I2716) {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	file.Read(bus.ROM[:])
+	file.Read(rom.ROM[:])
 }
 
 func main() {
 	log.Println("minemu")
 
 	bus := bus.EmulatorBus{}
-
-	loadBinFile("bank0.bin", &bus)
 
 	sim := cpu.CPU{}
 	sim.Bus = bus
@@ -66,10 +64,29 @@ func main() {
 	// dbg.SingleStep = true
 
 	dbg.Loop(func() {
+		// rom
+		rom0 := devices.NewI2716(0x0000)
+		rom1 := devices.NewI2716(0x1000)
+		rom2 := devices.NewI2716(0x2000)
+		rom3 := devices.NewI2716(0x3000)
+
+		loadBinFile("bank0.bin", rom0)
+		loadBinFile("bank1.bin", rom1)
+		loadBinFile("bank2.bin", rom2)
+		loadBinFile("bank3.bin", rom3)
+
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom0)
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom1)
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom2)
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom3)
+
+		// peripherals
 		pio := devices.NewI8255()
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, devices.NewST7565P(pio))
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, devices.NewI8251())
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, pio)
+
+		// start the cpu
 		go cpuRoutine(&sim, &cpuMutex, dbg)
 	})
 }

@@ -18,16 +18,12 @@ type BusDataIODevice interface {
 }
 
 type EmulatorBus struct {
-	ROM           [ROMSize]byte
 	RAM           [RAMSize]byte
 	MemoryDevices []BusMemoryIODevice
 	DataDevices   []BusDataIODevice
 }
 
 func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
-	if address < ROMSize {
-		return b.ROM[address]
-	}
 	if address > 0xFFFF-RAMSize {
 		return b.RAM[address&(RAMSize-1)]
 	}
