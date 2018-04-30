@@ -102,6 +102,7 @@ func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
 		// log.Printf("%+v", sim.Registers)
 
 		err := sim.Step(func() {
+			log.Println("Breakpoint triggered!")
 			dbg.SingleStep = true
 		})
 		if err != nil {

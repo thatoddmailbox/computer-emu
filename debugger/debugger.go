@@ -105,6 +105,7 @@ func (d *Debugger) Loop(callback func()) {
 		info := cpu.InstructionInfo{}
 		formattedParams := ""
 		dirty := true
+		lastSingleStep := d.SingleStep
 
 		// disassemblyAddress := []uint16{}
 		// disassemblyResults := []cpu.InstructionInfo{}
@@ -184,6 +185,11 @@ func (d *Debugger) Loop(callback func()) {
 					renderer.Present()
 
 					dirty = false
+				}
+
+				if d.SingleStep != lastSingleStep {
+					dirty = true
+					lastSingleStep = d.SingleStep
 				}
 
 				sdl.Delay(1000 / 60)
