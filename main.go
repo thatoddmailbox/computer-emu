@@ -13,6 +13,8 @@ import (
 	"github.com/thatoddmailbox/minemu/devices"
 )
 
+var st7565p *devices.ST7565P
+
 func loadHexFile(path string, rom *devices.I2716) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -82,7 +84,8 @@ func main() {
 
 		// peripherals
 		pio := devices.NewI8255()
-		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, devices.NewST7565P(pio))
+		st7565p = devices.NewST7565P(pio)
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, st7565p)
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, devices.NewI8251())
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, pio)
 
@@ -120,6 +123,7 @@ func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
 
 		err := sim.Step(func() {
 			log.Println("Breakpoint triggered!")
+			st7565p.PausedForBreakpoint = true
 			dbg.SingleStep = true
 		})
 		if err != nil {

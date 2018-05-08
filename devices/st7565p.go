@@ -17,6 +17,8 @@ const (
 
 // ST7565P display controller, see http://newhavendisplay.com/app_notes/ST7565P.pdf
 type ST7565P struct {
+	PausedForBreakpoint bool
+
 	columnImmediatelySet bool
 	columnAddress        uint8
 	pageAddress          uint8
@@ -82,6 +84,9 @@ func (d *ST7565P) drawBigPixel(data []byte, x int, y int) {
 func (d *ST7565P) drawLoop() {
 	for {
 		sdl.Do(func() {
+			if d.PausedForBreakpoint {
+				return
+			}
 			for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 				switch event.(type) {
 				case *sdl.KeyboardEvent:
@@ -190,7 +195,7 @@ func (d *ST7565P) incrementColumn() {
 }
 
 func (d *ST7565P) ReadByte(address uint16) uint8 {
-	maskedAddress := address & 1
+	maskedAddress := address & 0x800
 	if maskedAddress == 0 {
 		// status read
 		status := uint8(0)
@@ -214,7 +219,7 @@ func (d *ST7565P) ReadByte(address uint16) uint8 {
 }
 
 func (d *ST7565P) WriteByte(address uint16, data uint8) {
-	maskedAddress := address & 1
+	maskedAddress := address & 0x800
 	if maskedAddress == 0 {
 		// command
 		if data == 0xAF {
