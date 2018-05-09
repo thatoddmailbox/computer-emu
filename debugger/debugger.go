@@ -17,17 +17,19 @@ type DebuggerState struct {
 }
 
 type Debugger struct {
-	StepChannel chan bool
-	CPU         *cpu.CPU
-	CPUMutex    *sync.Mutex
-	SingleStep  bool
+	StepChannel      chan bool
+	CPU              *cpu.CPU
+	CPUMutex         *sync.Mutex
+	SingleStep       bool
+	breakpointResume func()
 }
 
-func NewDebugger(sim *cpu.CPU, cpuMutex *sync.Mutex) *Debugger {
+func NewDebugger(sim *cpu.CPU, cpuMutex *sync.Mutex, breakpointResume func()) *Debugger {
 	return &Debugger{
-		CPU:         sim,
-		CPUMutex:    cpuMutex,
-		StepChannel: make(chan bool),
+		CPU:              sim,
+		CPUMutex:         cpuMutex,
+		StepChannel:      make(chan bool),
+		breakpointResume: breakpointResume,
 	}
 }
 
@@ -120,6 +122,13 @@ func (d *Debugger) Loop(callback func()) {
 							if e.Keysym.Sym == sdl.K_SPACE {
 								if d.SingleStep {
 									dirty = true
+									d.StepChannel <- true
+								}
+							} else if e.Keysym.Sym == sdl.K_r {
+								if d.SingleStep {
+									dirty = true
+									d.SingleStep = false
+									d.breakpointResume()
 									d.StepChannel <- true
 								}
 							}

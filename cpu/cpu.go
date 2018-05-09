@@ -438,6 +438,75 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 				c.setFlag(FlagZero, false)
 			}
 		}
+	} else if prefix == 0xED {
+		if x == 2 {
+			// bli[y,z]
+			if y > 3 {
+				increment := true
+				repeat := false
+				if y == 4 {
+					increment = true
+				} else if y == 5 {
+					increment = false
+				} else if y == 6 {
+					increment = true
+					repeat = true
+				} else if y == 7 {
+					increment = false
+					repeat = true
+				}
+
+				if z == 0 {
+					// ld
+					validInstruction = true
+					fromAddress := c.Get16bitRegister(RegisterPairHL)
+					toAddress := c.Get16bitRegister(RegisterPairDE)
+					counter := c.Get16bitRegister(RegisterPairBC)
+
+					for {
+						// copy the data
+						dataByte := c.Bus.ReadMemoryByte(fromAddress)
+						log.Printf("0x%x -> 0x%x (0x%x)", fromAddress, toAddress, dataByte)
+						c.Bus.WriteMemoryByte(toAddress, dataByte)
+
+						if increment {
+							fromAddress = fromAddress + 1
+							toAddress = toAddress + 1
+						} else {
+							fromAddress = fromAddress - 1
+							toAddress = toAddress - 1
+						}
+						counter = counter - 1
+
+						c.setFlag(FlagHalfCarry, false)
+						c.setFlag(FlagSubtract, false)
+						if counter-1 == 0 {
+							c.setFlag(FlagParityOverflow, false)
+						} else {
+							c.setFlag(FlagParityOverflow, true)
+						}
+
+						c.Set16bitRegister(RegisterPairHL, fromAddress)
+						c.Set16bitRegister(RegisterPairDE, toAddress)
+						c.Set16bitRegister(RegisterPairBC, counter)
+
+						if !repeat {
+							break
+						}
+						if counter == 0 {
+							break
+						}
+					}
+				} else if z == 1 {
+					// cp
+					validInstruction = true
+				} else if z == 2 {
+					// in
+				} else if z == 3 {
+					// out
+				}
+			}
+		}
 	}
 
 	if shouldIncrementPC {

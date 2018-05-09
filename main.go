@@ -62,7 +62,10 @@ func main() {
 	sim.Bus = bus
 	cpuMutex := sync.Mutex{}
 
-	dbg := debugger.NewDebugger(&sim, &cpuMutex)
+	dbg := debugger.NewDebugger(&sim, &cpuMutex, func() {
+		log.Println("Execution resumed!")
+		st7565p.PausedForBreakpoint = false
+	})
 	// dbg.SingleStep = true
 
 	dbg.Loop(func() {

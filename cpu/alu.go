@@ -68,14 +68,14 @@ func (c *CPU) DoALUShiftOperation(op ALUShiftOperationType, input uint8) uint8 {
 	var result uint8
 	switch op {
 	case ALUShiftOperationSla:
-		c.setFlag(FlagCarry, (result&(1<<7)) != 0)
+		c.setFlag(FlagCarry, (input&(1<<7)) != 0)
 		result = input << 1
 	case ALUShiftOperationSra:
-		c.setFlag(FlagCarry, (result&1) != 0)
+		c.setFlag(FlagCarry, (input&1) != 0)
 		result = input >> 1
 		result |= ((input & (1 << 6)) << 1)
 	case ALUShiftOperationSrl:
-		c.setFlag(FlagCarry, (result&1) != 0)
+		c.setFlag(FlagCarry, (input&1) != 0)
 		result = input >> 1
 	default:
 		panic("cpu: unknown operation type passed to DoALUShiftOperation")
