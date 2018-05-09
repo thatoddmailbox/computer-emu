@@ -294,7 +294,17 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 						c.PC = (uint16(high) << 8) | uint16(low)
 						shouldIncrementPC = false
 					} else if p == 1 {
-						// TODO
+						// exx
+						validInstruction = true
+
+						c.Swap8bitRegisterWithShadow(RegisterB)
+						c.Swap8bitRegisterWithShadow(RegisterC)
+
+						c.Swap8bitRegisterWithShadow(RegisterD)
+						c.Swap8bitRegisterWithShadow(RegisterE)
+
+						c.Swap8bitRegisterWithShadow(RegisterH)
+						c.Swap8bitRegisterWithShadow(RegisterL)
 					} else if p == 2 {
 						// jp hl
 						validInstruction = true
@@ -466,7 +476,7 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 					for {
 						// copy the data
 						dataByte := c.Bus.ReadMemoryByte(fromAddress)
-						log.Printf("0x%x -> 0x%x (0x%x)", fromAddress, toAddress, dataByte)
+						// log.Printf("0x%x -> 0x%x (0x%x)", fromAddress, toAddress, dataByte)
 						c.Bus.WriteMemoryByte(toAddress, dataByte)
 
 						if increment {

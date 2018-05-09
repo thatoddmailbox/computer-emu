@@ -23,6 +23,29 @@ func (c *CPU) Get8bitRegister(reg Register8bitType) uint8 {
 	}
 }
 
+func (c *CPU) GetShadow8bitRegister(reg Register8bitType) uint8 {
+	switch reg {
+	case RegisterA:
+		return c.ShadowRegisters.A
+	case RegisterB:
+		return c.ShadowRegisters.B
+	case RegisterC:
+		return c.ShadowRegisters.C
+	case RegisterD:
+		return c.ShadowRegisters.D
+	case RegisterE:
+		return c.ShadowRegisters.E
+	case RegisterH:
+		return c.ShadowRegisters.H
+	case RegisterL:
+		return c.ShadowRegisters.L
+	case RegisterIndirectHL:
+		return c.Bus.ReadMemoryByte(registerPair(c.ShadowRegisters.H, c.ShadowRegisters.L))
+	default:
+		panic("cpu: unknown register passed to GetShadow8bitRegister")
+	}
+}
+
 func (c *CPU) Set8bitRegister(reg Register8bitType, val uint8) {
 	switch reg {
 	case RegisterA:
@@ -44,6 +67,35 @@ func (c *CPU) Set8bitRegister(reg Register8bitType, val uint8) {
 	default:
 		panic("cpu: unknown register passed to Set8bitRegister")
 	}
+}
+
+func (c *CPU) SetShadow8bitRegister(reg Register8bitType, val uint8) {
+	switch reg {
+	case RegisterA:
+		c.ShadowRegisters.A = val
+	case RegisterB:
+		c.ShadowRegisters.B = val
+	case RegisterC:
+		c.ShadowRegisters.C = val
+	case RegisterD:
+		c.ShadowRegisters.D = val
+	case RegisterE:
+		c.ShadowRegisters.E = val
+	case RegisterH:
+		c.ShadowRegisters.H = val
+	case RegisterL:
+		c.ShadowRegisters.L = val
+	case RegisterIndirectHL:
+		c.Bus.WriteMemoryByte(registerPair(c.ShadowRegisters.H, c.ShadowRegisters.L), val)
+	default:
+		panic("cpu: unknown register passed to SetShadow8bitRegister")
+	}
+}
+
+func (c *CPU) Swap8bitRegisterWithShadow(reg Register8bitType) {
+	temp := c.Get8bitRegister(reg)
+	c.Set8bitRegister(reg, c.GetShadow8bitRegister(reg))
+	c.SetShadow8bitRegister(reg, temp)
 }
 
 func (c *CPU) Get16bitRegister(reg RegisterPairType) uint16 {
