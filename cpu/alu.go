@@ -8,6 +8,14 @@ func (c *CPU) setAlu8OpFlags(result uint8, noOverflowResult int16, subtract bool
 	c.setFlag(FlagCarry, (noOverflowResult > 0xFF || noOverflowResult < 0))
 }
 
+func (c *CPU) setAlu16OpFlags(result uint16, noOverflowResult int32, subtract bool) {
+	c.setFlag(FlagSign, ((result & (1 << 15)) != 0))
+	c.setFlag(FlagZero, (result == 0))
+	c.setFlag(FlagParityOverflow, (int32(result) != noOverflowResult))
+	c.setFlag(FlagSubtract, subtract)
+	c.setFlag(FlagCarry, (noOverflowResult > 0xFFFF || noOverflowResult < 0))
+}
+
 func (c *CPU) Add8WithFlags(a uint8, b uint8) uint8 {
 	result := a + b
 	noOverflowResult := int16(a) + int16(b)
@@ -19,6 +27,13 @@ func (c *CPU) Subtract8WithFlags(a uint8, b uint8) uint8 {
 	result := a - b
 	noOverflowResult := int16(a) - int16(b)
 	c.setAlu8OpFlags(result, noOverflowResult, true)
+	return result
+}
+
+func (c *CPU) Subtract16WithFlags(a uint16, b uint16) uint16 {
+	result := a - b
+	noOverflowResult := int32(a) - int32(b)
+	c.setAlu16OpFlags(result, noOverflowResult, true)
 	return result
 }
 

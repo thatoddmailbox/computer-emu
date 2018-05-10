@@ -449,7 +449,17 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 			}
 		}
 	} else if prefix == 0xED {
-		if x == 2 {
+		if x == 1 {
+			if z == 2 {
+				if q == 0 {
+					// sbc hl, rp[p]
+					validInstruction = true
+					orig := c.Get16bitRegister(RegisterPairHL)
+					amount := c.Get16bitRegister(DecodeTable_RP[p])
+					c.Set16bitRegister(RegisterPairHL, c.Subtract16WithFlags(orig, amount))
+				}
+			}
+		} else if x == 2 {
 			// bli[y,z]
 			if y > 3 {
 				increment := true
@@ -519,7 +529,7 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 		}
 	}
 
-	if shouldIncrementPC {
+	if validInstruction && shouldIncrementPC {
 		c.PC += uint16(instructionLength)
 	}
 
