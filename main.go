@@ -85,6 +85,10 @@ func main() {
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom2)
 		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom3)
 
+		// ram
+		ram := devices.NewKR537RU2()
+		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, ram)
+
 		// peripherals
 		pio := devices.NewI8255()
 		st7565p = devices.NewST7565P(pio)

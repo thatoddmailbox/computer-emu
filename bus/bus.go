@@ -1,10 +1,5 @@
 package bus
 
-const (
-	ROMSize = 8 * 1024
-	RAMSize = 4 * 1024
-)
-
 type BusMemoryIODevice interface {
 	IsMapped(address uint16) bool
 	ReadByte(address uint16) uint8
@@ -18,15 +13,11 @@ type BusDataIODevice interface {
 }
 
 type EmulatorBus struct {
-	RAM           [RAMSize]byte
 	MemoryDevices []BusMemoryIODevice
 	DataDevices   []BusDataIODevice
 }
 
 func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
-	if address > 0xFFFF-RAMSize {
-		return b.RAM[address&(RAMSize-1)]
-	}
 	for _, device := range b.MemoryDevices {
 		if device.IsMapped(address) {
 			return device.ReadByte(address)
@@ -36,13 +27,6 @@ func (b *EmulatorBus) ReadMemoryByte(address uint16) uint8 {
 }
 
 func (b *EmulatorBus) WriteMemoryByte(address uint16, data uint8) {
-	if address < ROMSize {
-		panic("bus: write to read-only memory")
-	}
-	if address > 0xFFFF-RAMSize {
-		b.RAM[address&(RAMSize-1)] = data
-		return
-	}
 	for _, device := range b.MemoryDevices {
 		if device.IsMapped(address) {
 			device.WriteByte(address, data)
