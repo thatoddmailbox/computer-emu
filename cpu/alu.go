@@ -82,6 +82,20 @@ func (c *CPU) DoALUOperation(op ALUOperationType, operand uint8) {
 func (c *CPU) DoALUShiftOperation(op ALUShiftOperationType, input uint8) uint8 {
 	var result uint8
 	switch op {
+	case ALUShiftOperationRl:
+		beforeCarry := c.getFlag(FlagCarry)
+		c.setFlag(FlagCarry, (input&(1<<7)) != 0)
+		result = input << 1
+		if beforeCarry {
+			result |= 1
+		}
+	case ALUShiftOperationRr:
+		beforeCarry := c.getFlag(FlagCarry)
+		c.setFlag(FlagCarry, (input&1) != 0)
+		result = input >> 1
+		if beforeCarry {
+			result |= (1 << 7)
+		}
 	case ALUShiftOperationSla:
 		c.setFlag(FlagCarry, (input&(1<<7)) != 0)
 		result = input << 1

@@ -229,7 +229,16 @@ func (c *CPU) Step(breakpointTrigger func()) error {
 					}
 					c.setFlag(FlagCarry, lsb != 0)
 				} else if y == 4 {
-					// TODO
+					// daa
+					validInstruction = true
+					addAmount := uint8(0)
+					if c.getFlag(FlagHalfCarry) || (c.Registers.A&0xF) > 0x9 {
+						addAmount += 0x6
+					}
+					if c.getFlag(FlagCarry) || (c.Registers.A&0xF0) > 0x90 {
+						addAmount += 0x60
+					}
+					c.Registers.A = c.Add8WithFlags(c.Registers.A, addAmount)
 				} else if y == 5 {
 					// cpl
 					validInstruction = true
