@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"log"
 	"os"
 	"strconv"
@@ -44,17 +45,21 @@ func loadHexFile(path string, rom *devices.I2716) {
 	}
 }
 
-func loadBinFile(path string, rom *devices.I2716) {
+func loadBinFile(path string, rom []byte) {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	file.Read(rom.ROM[:])
+	file.Read(rom)
 }
 
 func main() {
 	log.Println("minemu")
+
+	weirdMapping := flag.Bool("weird-mapping", false, "Enables the weird mapping, with two modern ROMs in ROM0 and ROM1, and a modern RAM chip in ROM3.")
+
+	flag.Parse()
 
 	bus := bus.EmulatorBus{}
 
@@ -69,25 +74,39 @@ func main() {
 	// dbg.SingleStep = true
 
 	dbg.Loop(func() {
-		// rom
-		rom0 := devices.NewI2716(0x0000)
-		rom1 := devices.NewI2716(0x1000)
-		rom2 := devices.NewI2716(0x2000)
-		rom3 := devices.NewI2716(0x3000)
+		if !*weirdMapping {
+			// rom
+			rom0 := devices.NewI2716(0x0000)
+			rom1 := devices.NewI2716(0x1000)
+			rom2 := devices.NewI2716(0x2000)
+			rom3 := devices.NewI2716(0x3000)
 
-		loadBinFile("bank0.bin", rom0)
-		loadBinFile("bank1.bin", rom1)
-		loadBinFile("bank2.bin", rom2)
-		loadBinFile("bank3.bin", rom3)
+			loadBinFile("bank0.bin", rom0.ROM[:])
+			loadBinFile("bank1.bin", rom1.ROM[:])
+			loadBinFile("bank2.bin", rom2.ROM[:])
+			loadBinFile("bank3.bin", rom3.ROM[:])
 
-		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom0)
-		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom1)
-		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom2)
-		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom3)
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom0)
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom1)
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom2)
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom3)
 
-		// ram
-		ram := devices.NewKR537RU2()
-		sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, ram)
+			// ram
+			ram := devices.NewKR537RU2()
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, ram)
+		} else {
+			rom0 := devices.NewSST39SF010A()
+			rom1 := devices.NewAT28C256()
+
+			loadBinFile("rom0.bin", rom0.ROM[:])
+			loadBinFile("rom1.bin", rom1.ROM[:])
+
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom0)
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, rom1)
+
+			ram := devices.NewAS6C62256()
+			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, ram)
+		}
 
 		// peripherals
 		pio := devices.NewI8255()

@@ -32,7 +32,7 @@ func (r *I2716) ReadByte(address uint16) uint8 {
 
 func (r *I2716) WriteByte(address uint16, data uint8) {
 	if r.ReadOnly {
-		panic(errors.New("i2716: write to read-only ROM"))
+		panic(errors.New("i2716: write to ROM"))
 	}
 	accessAddress := address & 0x07FF
 	r.ROM[accessAddress] = data

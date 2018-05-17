@@ -178,25 +178,25 @@ func (d *Debugger) Loop(callback func()) {
 
 					d.drawText(renderer, font12, info.Mnemonic+" "+formattedParams, 0, 40)
 
-					d.drawText(renderer, font12, fmt.Sprintf("dropping: 0x%x, fall index: %d, random: %d", d.CPU.Bus.ReadMemoryByte(0xF004), d.CPU.Bus.ReadMemoryByte(0xF007), d.CPU.Bus.ReadMemoryByte(0xF002)), 0, 64)
-					d.drawText(renderer, font12, "tetris board:", 0, 76)
-					for i := 0; i < 14; i++ {
-						d.drawText(renderer, font12, fmt.Sprintf("%08b", d.CPU.Bus.ReadMemoryByte(uint16(0xF02A+i))), 0, 88+(i*12))
-					}
-					d.drawText(renderer, font12, "tetris fall zone:", 200, 76)
-					for i := 0; i < (15 + 4 + 4); i++ {
-						x := 200
-						y := 88 + (i * 12)
-						prefix := ""
-						if i > 14 && i < 14+5 {
-							prefix = "* "
-						}
-						if i > 14 {
-							x = 300
-							y -= (13 * 14)
-						}
-						d.drawText(renderer, font12, fmt.Sprintf("%s%08b", prefix, d.CPU.Bus.ReadMemoryByte(uint16(0xF008+i))), x, y)
-					}
+					// d.drawText(renderer, font12, fmt.Sprintf("dropping: 0x%x, fall index: %d, random: %d", d.CPU.Bus.ReadMemoryByte(0xF004), d.CPU.Bus.ReadMemoryByte(0xF007), d.CPU.Bus.ReadMemoryByte(0xF002)), 0, 64)
+					// d.drawText(renderer, font12, "tetris board:", 0, 76)
+					// for i := 0; i < 14; i++ {
+					// 	d.drawText(renderer, font12, fmt.Sprintf("%08b", d.CPU.Bus.ReadMemoryByte(uint16(0xF02A+i))), 0, 88+(i*12))
+					// }
+					// d.drawText(renderer, font12, "tetris fall zone:", 200, 76)
+					// for i := 0; i < (15 + 4 + 4); i++ {
+					// 	x := 200
+					// 	y := 88 + (i * 12)
+					// 	prefix := ""
+					// 	if i > 14 && i < 14+5 {
+					// 		prefix = "* "
+					// 	}
+					// 	if i > 14 {
+					// 		x = 300
+					// 		y -= (13 * 14)
+					// 	}
+					// 	d.drawText(renderer, font12, fmt.Sprintf("%s%08b", prefix, d.CPU.Bus.ReadMemoryByte(uint16(0xF008+i))), x, y)
+					// }
 
 					d.CPUMutex.Unlock()
 
