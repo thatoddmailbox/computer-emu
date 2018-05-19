@@ -1,7 +1,6 @@
 package devices
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -224,13 +223,13 @@ func (d *ST7565P) WriteByte(address uint16, data uint8) {
 		// command
 		if data == 0xAF {
 			// display on
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xAE {
 			// display off
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data&0xC0 == 0x40 {
 			// display start line set
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data&0xF0 == 0xB0 {
 			// page address set
 			d.pageAddress = data & 0xF
@@ -248,10 +247,10 @@ func (d *ST7565P) WriteByte(address uint16, data uint8) {
 			d.columnImmediatelySet = true
 		} else if data == 0xA0 {
 			// adc select normal
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xA1 {
 			// adc select reverse
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xA6 {
 			// display uninvert
 			d.displayMutex.Lock()
@@ -266,16 +265,16 @@ func (d *ST7565P) WriteByte(address uint16, data uint8) {
 			d.displayMutex.Unlock()
 		} else if data == 0xA4 {
 			// display all points off
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xA5 {
 			// display all points on
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xA2 {
 			// voltage bias ratio set
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xA3 {
 			// voltage bias ratio set
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data == 0xE0 {
 			// read/modify/write enable
 			d.readModifyWrite = true
@@ -298,10 +297,10 @@ func (d *ST7565P) WriteByte(address uint16, data uint8) {
 			d.displayMutex.Unlock()
 		} else if data&0xC0 == 0xC0 {
 			// common output mode select
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data&0xF8 == 0x28 {
 			// power controller set
-			panic(errors.New("not implemented"))
+			// panic(errors.New("not implemented"))
 		} else if data&0xF8 == 0xE3 {
 			// nop
 		}
