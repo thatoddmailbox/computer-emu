@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"flag"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/thatoddmailbox/minemu/bus"
 	"github.com/thatoddmailbox/minemu/cpu"
@@ -57,7 +59,10 @@ func loadBinFile(path string, rom []byte) {
 func main() {
 	log.Println("minemu")
 
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	weirdMapping := flag.Bool("weird-mapping", false, "Enables the weird mapping, with two modern ROMs in ROM0 and ROM1, and a modern RAM chip in ROM3.")
+	randomRam := flag.Bool("random-ram", false, "Fills the RAM with random data.")
 
 	flag.Parse()
 
@@ -106,6 +111,12 @@ func main() {
 
 			ram := devices.NewAS6C62256()
 			sim.Bus.MemoryDevices = append(sim.Bus.MemoryDevices, ram)
+
+			if *randomRam {
+				for i := 0; i < 4*1024; i++ {
+					ram.RAM[i] = uint8(rand.Uint32() % 256)
+				}
+			}
 		}
 
 		// peripherals
