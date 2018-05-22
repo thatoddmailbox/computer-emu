@@ -149,7 +149,8 @@ func (d *ST7565P) drawLoop() {
 
 			data := d.sdlSurface.Pixels()
 
-			for y := 0; y < st7565p_page_count; y++ {
+			displayY := 0
+			for y := (st7565p_page_count - 1); y >= 0; y-- {
 				for x := 0; x < st7565p_screen_width; x++ {
 					column := d.displayRAM[(y*st7565p_page_width)+x]
 					yOffset := 7
@@ -158,12 +159,13 @@ func (d *ST7565P) drawLoop() {
 
 						value := column & bitmask
 						if value != 0 {
-							d.drawBigPixel(data, x, (y*8)+yOffset)
+							d.drawBigPixel(data, x, (displayY*8)+yOffset)
 						}
 
 						yOffset -= 1
 					}
 				}
+				displayY += 1
 			}
 
 			d.sdlSurface.Unlock()
