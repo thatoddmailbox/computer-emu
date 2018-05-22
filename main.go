@@ -168,6 +168,8 @@ func cpuRoutine(sim *cpu.CPU, cpuMutex *sync.Mutex, dbg *debugger.Debugger) {
 		}
 		cpuMutex.Unlock()
 
+		time.Sleep(time.Second / 10000000)
+
 		if !dbg.SingleStep {
 			cycle += 1
 			if cycle > 1000 {
