@@ -210,7 +210,7 @@ func (d *ST7565P) ReadByte(address uint16) uint8 {
 			return 0xFF
 		}
 		d.displayMutex.Lock()
-		data := d.displayRAM[(d.pageAddress*st7565p_page_width)+d.columnAddress]
+		data := d.displayRAM[(int(d.pageAddress)*st7565p_page_width)+int(d.columnAddress)]
 		d.displayMutex.Unlock()
 		if !d.readModifyWrite {
 			d.incrementColumn()
