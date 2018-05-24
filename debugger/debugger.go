@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/thatoddmailbox/minemu/cpu"
+	"github.com/thatoddmailbox/computer-emu/cpu"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"

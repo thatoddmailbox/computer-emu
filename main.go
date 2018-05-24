@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thatoddmailbox/minemu/bus"
-	"github.com/thatoddmailbox/minemu/cpu"
-	"github.com/thatoddmailbox/minemu/debugger"
-	"github.com/thatoddmailbox/minemu/devices"
+	"github.com/thatoddmailbox/computer-emu/bus"
+	"github.com/thatoddmailbox/computer-emu/cpu"
+	"github.com/thatoddmailbox/computer-emu/debugger"
+	"github.com/thatoddmailbox/computer-emu/devices"
 )
 
 var st7565p *devices.ST7565P
@@ -57,7 +57,7 @@ func loadBinFile(path string, rom []byte) {
 }
 
 func main() {
-	log.Println("minemu")
+	log.Println("computer-emu")
 
 	rand.Seed(time.Now().UTC().UnixNano())
 

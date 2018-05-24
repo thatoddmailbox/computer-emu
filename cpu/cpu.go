@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/thatoddmailbox/minemu/bus"
+	"github.com/thatoddmailbox/computer-emu/bus"
 )
 
 var ErrNotImplemented = errors.New("cpu: instruction not implemented")
