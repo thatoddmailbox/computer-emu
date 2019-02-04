@@ -1,8 +1,15 @@
 # computer-emu
 An emulator for the Soviet-era microcomputer I built. See [this repository](https://github.com/thatoddmailbox/computer) for more information.
 
+![Display with Tetris](./images/display.png)
+
+![Debugger in action](./images/debugger.png)
+
 ## Usage
 You will need Go installed and set up properly to build the emulator.
+
+You'll also need SDL2 and SDL_ttf. On a Mac, you can use Homebrew: `brew install sdl2 sdl2_ttf`. Finally, you'll need the [Fira Code](https://github.com/tonsky/FiraCode) font installed. (it's used for text in the debugger) You can [change the font path](https://github.com/thatoddmailbox/computer-emu/blob/master/debugger/debugger.go#L70) if you want to use a different font or aren't on a Mac.
+
 ```shell
 go get https://github.com/thatoddmailbox/computer-emu
 cd ~/go/src/github.com/thatoddmailbox/computer-emu # you might need to change this depending on the location of your GOPATH
