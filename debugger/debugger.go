@@ -3,6 +3,7 @@ package debugger
 import (
 	"fmt"
 	"log"
+	"os/user"
 	"strconv"
 	"sync"
 
@@ -61,7 +62,12 @@ func (d *Debugger) Loop(callback func()) {
 
 	ttf.Init()
 
-	font12, err := ttf.OpenFont("/Users/student/Library/Fonts/FiraCode-Regular.ttf", 12)
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	font12, err := ttf.OpenFont(user.HomeDir+"/Library/Fonts/FiraCode-Regular.ttf", 12)
 	if err != nil {
 		panic(err)
 	}
